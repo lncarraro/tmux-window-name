@@ -23,6 +23,12 @@ OPTIONS_PREFIX = '@tmux_window_name_'
 HOOK_INDEX = 8921
 HOME_DIR = os.path.expanduser('~')
 USR_BIN_REMOVER = (r'^(/usr)?/bin/(.+)', r'\g<2>')
+TMUX_SAFE_COLON = '∶'
+TMUX_SAFE_DOT = '․'
+TMUX_SAFE_CHARS = {
+    ':': TMUX_SAFE_COLON,
+    '.': TMUX_SAFE_DOT,
+}
 
 DEFAULT_PROGRAM_ICONS = {
     'nvim': '',  # nf-dev-vim
@@ -328,10 +334,18 @@ def get_session_active_panes(session: Session) -> List[TmuxPane]:
     return [p for p in session.server.panes if p.pane_active == '1' and p.window_id in session_windows_ids]
 
 
+def escape_tmux_window_name(window_name: str) -> str:
+    for tmux_char, safe_char in TMUX_SAFE_CHARS.items():
+        window_name = window_name.replace(tmux_char, safe_char)
+
+    return window_name
+
+
 def rename_window(server: Server, window_id: str, window_name: str, max_name_len: int, options: Options):
     logging.debug(f'renaming window_id={window_id} to window_name={window_name}')
 
     window_name = window_name[:max_name_len]
+    window_name = escape_tmux_window_name(window_name)
     logging.debug(f'shortened name window_name={window_name}')
 
     server.cmd('rename-window', '-t', window_id, window_name)

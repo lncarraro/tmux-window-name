@@ -7,7 +7,14 @@ from unittest.mock import Mock, patch, call
 
 sys.path.append('scripts/')
 
-from rename_session_windows import Options, IconStyle, get_program_icon, substitute_name, DEFAULT_PROGRAM_ICONS
+from rename_session_windows import (
+    Options,
+    IconStyle,
+    get_program_icon,
+    substitute_name,
+    DEFAULT_PROGRAM_ICONS,
+    escape_tmux_window_name,
+)
 
 
 @dataclass
@@ -112,3 +119,9 @@ def test_custom_icons_from_dictionary():
     assert get_program_icon('python', options) == '🐍'
     assert get_program_icon('custom', options) == '📦'
     assert get_program_icon('nvim', options) == '󰹻'
+
+
+def test_escape_tmux_window_name_reserved_chars():
+    """Test tmux 3.7 reserved characters are replaced with safe lookalikes."""
+    assert escape_tmux_window_name('codex:.tmux') == 'codex∶․tmux'
+    assert escape_tmux_window_name('.config/foo.bar') == '․config/foo․bar'
